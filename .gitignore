@@ -2,6 +2,7 @@
 # folder (fomo/, floor/, data/, .env, local tooling) stays private.
 /*
 !/src/
+!/docs/
 !/scripts/
 !/README.md
 !/LICENSE

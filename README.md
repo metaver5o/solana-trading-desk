@@ -8,6 +8,12 @@ This is the honest version of the "350 bots run my desk" story: ~6 focused roles
 (not 350 clones), a real approval gate, and hard risk limits — instead of
 autonomy theater.
 
+![Desk demo: scan, review, approve, preflight refuses an unfunded wallet](docs/demo.gif)
+
+*Real run from a fresh clone. The tokens are live scanner output, not
+recommendations. The wallet is a brand-new throwaway with 0 SOL, so preflight
+refuses to trade.*
+
 ## The desk
 
 | Agent | File | Job |
@@ -26,6 +32,24 @@ node src/approve.js     →  review the queue in full
 node src/approve.js ID  →  mark intent to trade  (still spends nothing)
 node src/execute.js     →  execute approved buys + place TP/SL  (DRY_RUN by default)
 ```
+
+### What each step looks like
+
+**1. `node src/desk.js`**: scan, gate, score and size. No wallet is touched.
+
+![desk.js output](docs/1-desk.png)
+
+**2. `node src/approve.js`**: the full queue, with the score breakdown, exits and chart link for each proposal.
+
+![approve.js queue](docs/2-queue.png)
+
+**3. `node src/approve.js <id>`**: marks intent only. Nothing is spent.
+
+![approve.js approving one proposal](docs/3-approve.png)
+
+**4. `node src/execute.js`**: preflight runs before anything is signed. Here the wallet is empty, so it aborts.
+
+![execute.js preflight refusing](docs/4-preflight.png)
 
 ## Setup
 
