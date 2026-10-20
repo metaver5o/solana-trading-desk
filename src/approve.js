@@ -11,6 +11,7 @@
 import { pending, all, setStatus } from './proposals.js';
 
 const args = process.argv.slice(2);
+const int = (n) => Math.round(n || 0).toLocaleString('en-US');
 
 function show(p) {
   const m = p.metrics || {};
@@ -44,4 +45,3 @@ if (args.length === 0) {
   console.log(`  ${appr.length} total awaiting execution. Run:  node src/execute.js`);
 }
 
-const int = (n) => Math.round(n || 0).toLocaleString('en-US');
