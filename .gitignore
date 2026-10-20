@@ -1,0 +1,15 @@
+# Allowlist: only the propose-only desk is published. Everything else in this
+# folder (fomo/, floor/, data/, .env, local tooling) stays private.
+/*
+!/src/
+!/scripts/
+!/README.md
+!/LICENSE
+!/.env.example
+!/.gitignore
+!/package.json
+!/package-lock.json
+
+node_modules/
+.env
+*.log

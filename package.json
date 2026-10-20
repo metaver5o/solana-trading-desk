@@ -1,0 +1,21 @@
+{
+  "name": "solana-trading-desk",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Propose-only multi-agent Solana trading desk. Agents scan and rank; a human approves; TradeRouter executes.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "desk": "node src/desk.js",
+    "queue": "node src/approve.js",
+    "approve": "node src/approve.js",
+    "execute": "node src/execute.js",
+    "preflight": "node src/execute.js --preflight"
+  },
+  "dependencies": {
+    "@solana/web3.js": "1.95.8",
+    "bs58": "6.0.0",
+    "ws": "8.18.0",
+    "ajv": "8.17.1",
+    "tweetnacl": "1.0.3"
+  }
+}
