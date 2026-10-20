@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Solana Trading Desk</title>
+<title>Solana Trading Desk · CRIPTOGRAFIA</title>
 <meta name="description" content="A propose-only Solana trading desk: 5 agents scan, score and size; a human approves; DRY_RUN by default. Open source, MIT.">
-<meta property="og:title" content="Solana Trading Desk: agents propose, you approve">
+<meta property="og:title" content="CRIPTOGRAFIA Solana Trading Desk: agents propose, you approve">
 <meta property="og:description" content="5 agents and a human approval gate instead of autonomy theater. Hard risk limits in code. MIT.">
 <meta property="og:image" content="https://solana.criptografia.app/ui-1-queue.png">
 <meta property="og:url" content="https://solana.criptografia.app/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239945ff'/%3E%3Cstop offset='1' stop-color='%2314f195'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='13' font-weight='700' text-anchor='middle' fill='%230b0f17'%3ESD%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2304060a'/%3E%3Crect x='1' y='1' width='30' height='30' rx='5' fill='none' stroke='%23c8a448' stroke-width='1.5'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='18' font-weight='700' text-anchor='middle' fill='%23F7C948'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Courier+Prime:wght@400;700&display=swap">
 <style>
-/* Project page. Same palette as the desk UI. No external fonts, scripts or CDNs. */
+/* CRIPTOGRAFIA project page: brand wordmark and gold from criptografia.app. No scripts. */
 :root {
-  --bg: #0b0f17; --panel: #121826; --panel-2: #172033; --line: #24304a; --ink: #e8edf6; --muted: #8a96ad;
-  --accent: #7c8cff; --good: #2fd38c; --bad: #ff6b6b; --warn: #ffb84d; --good-bg: #0f2a20; --warn-bg: #2d2412;
+  --bg: #04060a; --panel: #121826; --panel-2: #172033; --line: #24304a; --ink: #e8edf6; --muted: #8a96ad;
+  --accent: #c8a448; --gold: #F7C948; --gold-l: #f4e8b8; --good: #19f59a; --bad: #ff6b6b; --warn: #ffb84d; --good-bg: #0f2a20; --warn-bg: #2d2412;
+  --brand: "Cinzel Decorative", Cinzel, serif; --label: "Courier Prime", ui-monospace, monospace;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
 }
@@ -24,20 +27,23 @@ html { scroll-behavior: smooth }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans) }
 a { color: var(--accent) }
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px }
-nav { position: sticky; top: 0; z-index: 5; background: rgba(11, 15, 23, .85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line) }
+nav { position: sticky; top: 0; z-index: 5; background: rgba(12, 14, 20, .96); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(200, 164, 72, .30) }
 nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 12px }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none }
-.logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #9945ff, #14f195); display: grid; place-items: center; font: 700 12px var(--mono); color: #0b0f17 }
+.brand { display: flex; align-items: baseline; gap: 12px; text-decoration: none }
+.wordmark { font: 700 14px var(--brand); letter-spacing: .22em; color: var(--gold) }
+.prod { font: 400 12px var(--label); letter-spacing: .16em; text-transform: uppercase; color: #b8c4d0 }
+.prod, .wordmark { white-space: nowrap }
+@media (max-width: 420px) { .wordmark { font-size: 12px; letter-spacing: .14em } .prod { font-size: 10px; letter-spacing: .1em } }
 .links { display: flex; gap: 18px; align-items: center; font-size: 14px }
-.links a { color: var(--muted); text-decoration: none }
+.links a { color: #b8c4d0; text-decoration: none; font: 400 11px var(--label); letter-spacing: .16em; text-transform: uppercase }
 .links a:hover { color: var(--ink) }
 .btn { display: inline-flex; align-items: center; gap: 8px; font: 600 14px var(--sans); border-radius: 9px; padding: 10px 16px; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: var(--panel-2) }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #0b0f17 }
+.btn.primary { background: linear-gradient(180deg, var(--gold), var(--accent)); border-color: var(--accent); color: #04060a }
 .btn:hover { border-color: var(--accent) }
 .hero { padding: 64px 0 28px; display: grid; gap: 22px; text-align: center; justify-items: center }
-.eyebrow { font: 600 12px var(--mono); color: var(--warn); background: var(--warn-bg); border: 1px solid #5a4520; padding: 4px 10px; border-radius: 999px; letter-spacing: .06em }
+.eyebrow { font: 700 11px var(--label); color: var(--gold); background: rgba(200, 164, 72, .08); border: 1px solid rgba(200, 164, 72, .4); padding: 4px 10px; border-radius: 999px; letter-spacing: .06em }
 h1 { font-size: clamp(32px, 5.4vw, 56px); line-height: 1.05; margin: 0; letter-spacing: -0.02em; max-width: 18ch; text-wrap: balance }
-h1 em { font-style: normal; background: linear-gradient(90deg, #9945ff, #14f195); -webkit-background-clip: text; background-clip: text; color: transparent }
+h1 em { font-style: normal; background: linear-gradient(180deg, var(--gold-l), var(--gold) 55%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent }
 .lede { color: var(--muted); font-size: 18px; max-width: 62ch; margin: 0 }
 .cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center }
 .video { margin: 18px auto 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); box-shadow: 0 30px 80px rgba(0, 0, 0, .45); max-width: 1000px }
@@ -86,7 +92,7 @@ footer a { color: var(--muted) }
 <body>
 <nav>
   <div class="wrap">
-    <a class="brand" href="#top"><span class="logo">SD</span>Solana Trading Desk</a>
+    <a class="brand" href="https://criptografia.app" aria-label="CRIPTOGRAFIA home"><span class="wordmark">CRIPTOGRAFIA</span><span class="prod">Solana Desk</span></a>
     <div class="links">
       <a class="hide-sm" href="#how">How it works</a>
       <a class="hide-sm" href="#safety">Safety</a>
@@ -98,9 +104,9 @@ footer a { color: var(--muted) }
 
 <main id="top">
   <div class="wrap hero">
-    <span class="eyebrow">OPEN SOURCE · MIT · DRY RUN BY DEFAULT</span>
+    <span class="eyebrow">CRIPTOGRAFIA · OPEN SOURCE · MIT</span>
     <h1>Agents propose. <em>You approve.</em> Nothing spends by itself.</h1>
-    <p class="lede">A Solana trading desk where 5 agents do the boring 95%: scan the market, score setups, size positions. They stop at the 5% that spends money. That part needs you.</p>
+    <p class="lede">The CRIPTOGRAFIA Solana desk, where 5 agents do the boring 95%: scan the market, score setups, size positions. They stop at the 5% that spends money. That part needs you.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/metaver5o/solana-trading-desk">View on GitHub</a>
       <a class="btn" href="#start">Run it locally</a>
@@ -229,7 +235,7 @@ node src/execute.js      <span class="c"># preflight, then DRY_RUN execution</sp
 
 <footer>
   <div class="wrap">
-    <span>Built by Marco Matos at <a href="https://criptografia.app">CRIPTOGRAFIA</a>. MIT licensed.</span>
+    <span><a class="wordmark" href="https://criptografia.app" style="text-decoration:none">CRIPTOGRAFIA</a> &nbsp;Built by Marco Matos. MIT licensed.</span>
     <span><a href="https://github.com/metaver5o/solana-trading-desk">Source</a> · <a href="https://github.com/metaver5o/solana-trading-desk/blob/main/README.md">README</a> · <a href="https://github.com/metaver5o/solana-trading-desk/blob/main/LICENSE">License</a></span>
   </div>
 </footer>
