@@ -8,7 +8,7 @@ This is the honest version of the "350 bots run my desk" story: ~6 focused roles
 (not 350 clones), a real approval gate, and hard risk limits — instead of
 autonomy theater.
 
-![Desk demo: scan, review, approve, preflight refuses an unfunded wallet](docs/demo.gif)
+![Desk UI: run a scan, approve one proposal, reject another, preflight refuses an unfunded wallet](docs/ui-demo.gif)
 
 *Real run from a fresh clone. The tokens are live scanner output, not
 recommendations. The wallet is a brand-new throwaway with 0 SOL, so preflight
@@ -24,7 +24,29 @@ refuses to trade.*
 | Head of desk | `src/agents/headofdesk.js` | Run the cycle, escalate only what clears risk → proposal queue |
 | Executor | `src/execution/traderouter.js` | The only code that spends. DRY_RUN gate, kill-switch, server-sig verify |
 
-## Flow
+## Web UI
+
+```bash
+npm run web      # http://127.0.0.1:4777
+```
+
+A local control room over the same code paths as the CLI: run a desk scan,
+review each proposal's score breakdown and market data, approve or reject, and
+run preflight.
+
+**It can approve. It cannot spend.** There is no execute route on the server.
+Approved trades still run only when you run `node src/execute.js`.
+
+- Binds to `127.0.0.1` only and rejects requests for any other Host
+- Every write needs a per-process token embedded in the page, so another
+  website open in your browser can't approve through it
+- No external scripts, fonts or CDNs: the page talks only to this server
+
+![Pending queue with score breakdown and approve/reject](docs/ui-1-queue.png)
+
+![Preflight result and decided proposals](docs/ui-2-preflight.png)
+
+## CLI flow
 
 ```
 node src/desk.js        →  scan + rank + size  →  writes proposals (read-only, no wallet)
@@ -34,6 +56,8 @@ node src/execute.js     →  execute approved buys + place TP/SL  (DRY_RUN by de
 ```
 
 ### What each step looks like
+
+![CLI demo](docs/cli-demo.gif)
 
 **1. `node src/desk.js`**: scan, gate, score and size. No wallet is touched.
 

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solana Trading Desk</title>
+<style>
+/* Control room: status bar, limits strip, proposal queue as cards, history table.
+   No external fonts or scripts: the page never calls anything but this server. */
+:root {
+  --bg: #0b0f17; --panel: #121826; --panel-2: #172033; --line: #24304a; --ink: #e8edf6; --muted: #8a96ad;
+  --accent: #7c8cff; --good: #2fd38c; --bad: #ff6b6b; --warn: #ffb84d; --good-bg: #0f2a20; --bad-bg: #2d1518; --warn-bg: #2d2412;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+}
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans) }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 18px }
+header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between }
+.brand { display: flex; gap: 12px; align-items: center }
+.logo { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #9945ff, #14f195); display: grid; place-items: center; font: 700 15px var(--mono); color: #0b0f17 }
+h1 { font-size: 19px; margin: 0; letter-spacing: -0.01em }
+.sub { color: var(--muted); font-size: 12.5px }
+.mode { font: 700 12px var(--mono); padding: 5px 10px; border-radius: 999px; letter-spacing: .06em }
+.mode.dry { color: var(--warn); background: var(--warn-bg); border: 1px solid #5a4520 }
+.mode.live { color: var(--bad); background: var(--bad-bg); border: 1px solid #6a2a30 }
+.actions { display: flex; gap: 8px; flex-wrap: wrap }
+button { font: 600 13px var(--sans); border-radius: 8px; padding: 8px 14px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer }
+button:hover { border-color: var(--accent) }
+button:disabled { opacity: .5; cursor: wait }
+button.primary { background: var(--accent); border-color: var(--accent); color: #0b0f17 }
+button.approve { background: var(--good-bg); color: var(--good); border-color: #1d5c42 }
+button.reject { color: var(--bad); border-color: #5c2a30; background: transparent }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px }
+.stat b { display: block; font: 700 19px var(--mono); font-variant-numeric: tabular-nums }
+.stat span { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em }
+.meter { height: 4px; background: var(--line); border-radius: 4px; margin-top: 7px; overflow: hidden }
+.meter i { display: block; height: 100% ; background: var(--accent) }
+.banner { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; color: var(--muted); font-size: 13px }
+.banner code { font: 12.5px var(--mono); color: var(--ink) }
+section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 0 10px; display: flex; gap: 8px; align-items: center }
+.count { font: 600 11px var(--mono); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--ink) }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px }
+.sym { font: 700 17px var(--sans) }
+.sym small { display: block; font: 12px var(--mono); color: var(--muted); font-weight: 400 }
+.score { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font: 700 16px var(--mono);
+  background: conic-gradient(var(--c) calc(var(--v) * 1%), var(--line) 0); position: relative; flex: none }
+.score::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--panel) }
+.score span { position: relative }
+.size { font: 600 13px var(--mono); color: var(--accent) }
+.parts { display: grid; gap: 5px }
+.part { display: grid; grid-template-columns: 112px 1fr 30px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted) }
+.bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden }
+.bar i { display: block; height: 100%; border-radius: 6px }
+.part b { font: 600 12px var(--mono); color: var(--ink); text-align: right }
+.kv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: var(--panel-2); border-radius: 8px; padding: 8px 10px }
+.kv div { min-width: 0 }
+.kv span { display: block; color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em }
+.kv b { font: 600 13px var(--mono); overflow-wrap: anywhere }
+.up { color: var(--good) } .down { color: var(--bad) }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 12px var(--mono); color: var(--muted) }
+.meta a { color: var(--accent); text-decoration: none }
+.btns { display: flex; gap: 8px }
+.btns button { flex: 1 }
+.empty { color: var(--muted); padding: 22px; text-align: center; background: var(--panel); border: 1px dashed var(--line); border-radius: 12px }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 13px }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap }
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.pill { font: 600 11px var(--mono); padding: 2px 8px; border-radius: 999px; text-transform: uppercase }
+.pill.approved { color: var(--good); background: var(--good-bg) }
+.pill.rejected { color: var(--bad); background: var(--bad-bg) }
+.pill.executed { color: var(--accent); background: #1a2040 }
+.pill.expired { color: var(--muted); background: var(--panel-2) }
+.tablewrap { overflow-x: auto }
+.preflight { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px; font: 13px var(--mono) }
+.preflight .ok { color: var(--good) } .preflight .no { color: var(--bad) }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none }
+.toast.show { opacity: 1 }
+footer { color: var(--muted); font-size: 12px; text-align: center }
+@media (max-width: 520px) { .cards { grid-template-columns: 1fr } .kv { grid-template-columns: repeat(2, 1fr) } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">SD</div>
+      <div><h1>Solana Trading Desk</h1><div class="sub" id="sub">Agents propose. You approve. Nothing spends from this page.</div></div>
+    </div>
+    <div class="actions">
+      <span class="mode dry" id="mode">DRY RUN</span>
+      <button id="preflightBtn" type="button">Preflight</button>
+      <button id="scanBtn" class="primary" type="button">Run desk scan</button>
+    </div>
+  </header>
+
+  <section class="limits" id="limits" aria-label="Risk limits"></section>
+
+  <div class="banner">This page can approve. It cannot spend. Approved trades run only when you run <code>node src/execute.js</code></div>
+
+  <div id="preflightOut" hidden></div>
+
+  <section>
+    <h2>Pending approval <span class="count" id="pendingCount">0</span></h2>
+    <div class="cards" id="pending"></div>
+  </section>
+
+  <section>
+    <h2>Decided <span class="count" id="historyCount">0</span></h2>
+    <div class="tablewrap"><table><thead><tr><th>Token</th><th>Status</th><th>Score</th><th>Size</th><th>1h</th><th>Liquidity</th><th>Decided</th></tr></thead><tbody id="history"></tbody></table></div>
+  </section>
+
+  <footer>Local only (127.0.0.1). Prices from Dexscreener; scores are a starting rubric, not advice.</footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+const TOKEN = "__DESK_TOKEN__";
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === "class" ? e.className = v : k === "style" ? e.style.cssText = v : e.setAttribute(k, v);
+  for (const c of kids) if (c != null) e.append(c);
+  return e;
+};
+const usd = (n) => n == null ? "-" : n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(0)}k` : `$${n.toFixed(0)}`;
+const ago = (iso) => { if (!iso) return "-"; const m = Math.round((Date.now() - new Date(iso)) / 6e4); return m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`; };
+const age = (min) => min == null ? "-" : min < 60 ? `${Math.round(min)}m` : `${(min / 60).toFixed(min < 600 ? 1 : 0)}h`;
+const scoreColor = (s) => s >= 75 ? "var(--good)" : s >= 60 ? "var(--warn)" : "var(--bad)";
+const LABELS = { momentum: "Momentum", flow: "Buy flow", liquidityQuality: "Liquidity quality", freshness: "Freshness" };
+
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json", "X-Desk-Token": TOKEN }, body: JSON.stringify(body) });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || res.status);
+  return json;
+}
+
+function stat(value, label, frac) {
+  return el("div", { class: "stat" }, el("b", {}, value), el("span", {}, label),
+    frac == null ? null : el("div", { class: "meter" }, el("i", { style: `width:${Math.min(100, frac * 100)}%;background:${frac > .8 ? "var(--bad)" : "var(--accent)"}` })));
+}
+
+function card(p) {
+  const m = p.metrics || {};
+  const parts = el("div", { class: "parts" }, ...Object.entries(p.scoreParts || {}).map(([k, v]) =>
+    el("div", { class: "part" }, el("span", {}, LABELS[k] || k), el("div", { class: "bar" }, el("i", { style: `width:${v}%;background:${scoreColor(v)}` })), el("b", {}, String(v)))));
+  const chg = m.chg1h ?? 0;
+  const approve = el("button", { class: "approve", type: "button" }, "Approve");
+  const reject = el("button", { class: "reject", type: "button" }, "Reject");
+  approve.onclick = () => decide("approve", p, approve, reject);
+  reject.onclick = () => decide("reject", p, approve, reject);
+  return el("article", { class: "card" },
+    el("div", { class: "top" },
+      el("div", {}, el("div", { class: "sym" }, p.symbol, el("small", {}, `${p.mint.slice(0, 4)}...${p.mint.slice(-4)} · ${age(m.ageMinutes)} old`)),
+        el("div", { class: "size" }, `${p.sizeSol.toFixed(4)} SOL · slippage ${(p.slippageBps / 100).toFixed(0)}%`)),
+      el("div", { class: "score", style: `--v:${p.score};--c:${scoreColor(p.score)}`, title: "Desk score" }, el("span", {}, String(p.score)))),
+    parts,
+    el("div", { class: "kv" },
+      el("div", {}, el("span", {}, "1h"), el("b", { class: chg >= 0 ? "up" : "down" }, `${chg >= 0 ? "+" : ""}${chg.toFixed(0)}%`)),
+      el("div", {}, el("span", {}, "Liquidity"), el("b", {}, usd(m.liquidityUsd))),
+      el("div", {}, el("span", {}, "Vol / h"), el("b", {}, usd(m.volH1Usd))),
+      el("div", {}, el("span", {}, "FDV"), el("b", {}, usd(m.fdvUsd)))),
+    el("div", { class: "meta" },
+      el("span", {}, `TP ${(p.exits?.tpBps / 100).toFixed(0)}% · SL ${(p.exits?.slBps / 100).toFixed(0)}% of entry mcap`),
+      p.url ? el("a", { href: p.url, target: "_blank", rel: "noopener" }, "Chart") : null),
+    el("div", { class: "btns" }, approve, reject));
+}
+
+async function decide(action, p, ...btns) {
+  btns.forEach((b) => b.disabled = true);
+  try { const r = await api(`/api/${action}`, { ids: [p.id] }); toast(`${p.symbol} ${action === "approve" ? "approved (intent only)" : "rejected"}`); render(r.state); }
+  catch (e) { toast(`Error: ${e.message}`); btns.forEach((b) => b.disabled = false); }
+}
+
+function render(s) {
+  $("mode").textContent = s.mode === "DRY_RUN" ? "DRY RUN" : "LIVE";
+  $("mode").className = `mode ${s.mode === "DRY_RUN" ? "dry" : "live"}`;
+  const L = s.limits;
+  $("limits").replaceChildren(
+    stat(`${L.maxBuySol} SOL`, "Max per buy"),
+    stat(`${s.deployedSol.toFixed(3)} / ${L.maxDeployedSol}`, "Deployed SOL", s.deployedSol / L.maxDeployedSol),
+    stat(`${s.openPositions} / ${L.maxPositions}`, "Open positions", s.openPositions / L.maxPositions),
+    stat(`${L.maxDailyLossSol} SOL`, "Daily-loss kill switch"),
+    stat(`${(L.tpBps / 100).toFixed(0)}% / ${(L.slBps / 100).toFixed(0)}%`, "TP / SL of entry"));
+  $("sub").textContent = s.lastScan
+    ? `Last scan ${ago(s.lastScan.at)}: ${s.lastScan.scanned} scanned, ${s.lastScan.passed} passed gates, ${s.lastScan.added} new proposals.`
+    : "Agents propose. You approve. Nothing spends from this page.";
+  const pending = s.proposals.filter((p) => p.status === "pending").sort((a, b) => b.score - a.score);
+  $("pendingCount").textContent = pending.length;
+  $("pending").replaceChildren(...(pending.length ? pending.map(card) : [el("div", { class: "empty" }, "Queue is empty. Run a desk scan.")]));
+  const done = s.proposals.filter((p) => p.status !== "pending");
+  $("historyCount").textContent = done.length;
+  $("history").replaceChildren(...done.slice(0, 25).map((p) => el("tr", {},
+    el("td", {}, p.symbol), el("td", {}, el("span", { class: `pill ${p.status}` }, p.status)),
+    el("td", { class: "num" }, String(p.score)), el("td", { class: "num" }, `${p.sizeSol.toFixed(4)} SOL`),
+    el("td", { class: `num ${(p.metrics?.chg1h ?? 0) >= 0 ? "up" : "down"}` }, `${(p.metrics?.chg1h ?? 0) >= 0 ? "+" : ""}${(p.metrics?.chg1h ?? 0).toFixed(0)}%`),
+    el("td", { class: "num" }, usd(p.metrics?.liquidityUsd)),
+    el("td", {}, ago(p.approvedAt || p.rejectedAt || p.executedAt || p.createdAt)))));
+  $("scanBtn").disabled = s.scanning;
+}
+
+$("scanBtn").onclick = async () => {
+  $("scanBtn").disabled = true; $("scanBtn").textContent = "Scanning...";
+  try { const r = await api("/api/scan", {}); toast(`Scan done: ${r.lastScan.added} new proposal(s)`); render(r.state); }
+  catch (e) { toast(`Scan failed: ${e.message}`); }
+  finally { $("scanBtn").textContent = "Run desk scan"; $("scanBtn").disabled = false; }
+};
+
+$("preflightBtn").onclick = async () => {
+  const out = $("preflightOut"); out.hidden = false; out.replaceChildren(el("div", { class: "preflight" }, "Running preflight..."));
+  try {
+    const r = await api("/api/preflight", {});
+    out.replaceChildren(el("div", { class: "preflight" },
+      ...r.checks.map((c) => el("div", { class: c.pass ? "ok" : "no" }, `${c.pass ? "PASS" : "FAIL"}  ${c.name}${c.info ? `  (${c.info})` : ""}${c.error ? `: ${c.error}` : ""}`)),
+      el("div", { class: r.ok ? "ok" : "no" }, r.ok ? "Ready. Execution still needs node src/execute.js." : "Execution would abort until these pass.")));
+  } catch (e) { out.replaceChildren(el("div", { class: "preflight no" }, `Preflight error: ${e.message}`)); }
+};
+
+api("/api/state").then(render).catch((e) => toast(`Load failed: ${e.message}`));
+setInterval(() => api("/api/state").then(render).catch(() => {}), 15000);
+</script>
+</body>
+</html>

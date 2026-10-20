@@ -9,7 +9,8 @@
     "queue": "node src/approve.js",
     "approve": "node src/approve.js",
     "execute": "node src/execute.js",
-    "preflight": "node src/execute.js --preflight"
+    "preflight": "node src/execute.js --preflight",
+    "web": "node src/web.js"
   },
   "dependencies": {
     "@solana/web3.js": "1.95.8",

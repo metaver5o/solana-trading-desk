@@ -295,6 +295,16 @@ export async function handleOrderFilled(msg) {
 
 // ---------- Preflight ----------
 export async function preflight() {
+  const checks = await preflightChecks();
+  console.log('\n=== PREFLIGHT ===');
+  for (const c of checks) console.log(`${c.pass ? '✓' : '✗'} ${c.name}${c.info ? `  (${c.info})` : ''}${c.error ? ` — ${c.error}` : ''}`);
+  const ok = checks.every((c) => c.pass);
+  console.log(`\n${ok ? '🟢 ready' : '🔴 fix failures before live'}  |  Mode: ${DRY_RUN ? '📋 DRY RUN' : '🔴 LIVE'}\n`);
+  return ok;
+}
+
+// The checks alone, without printing. Shared by the CLI and the web UI.
+export async function preflightChecks() {
   const checks = [];
   checks.push({ name: 'PRIVATE_KEY loaded', pass: hasWallet() });
   try { checks.push({ name: 'Wallet loads', pass: true, info: getWallet().publicKey.toBase58() }); }
@@ -305,12 +315,7 @@ export async function preflight() {
     const bal = await connection.getBalance(getWallet().publicKey);
     checks.push({ name: 'SOL balance > 0.01', pass: bal > 10_000_000, info: `${(bal / 1e9).toFixed(4)} SOL` });
   } catch (e) { checks.push({ name: 'SOL balance', pass: false, error: e.message }); }
-
-  console.log('\n=== PREFLIGHT ===');
-  for (const c of checks) console.log(`${c.pass ? '✓' : '✗'} ${c.name}${c.info ? `  (${c.info})` : ''}${c.error ? ` — ${c.error}` : ''}`);
-  const ok = checks.every((c) => c.pass);
-  console.log(`\n${ok ? '🟢 ready' : '🔴 fix failures before live'}  |  Mode: ${DRY_RUN ? '📋 DRY RUN' : '🔴 LIVE'}\n`);
-  return ok;
+  return checks;
 }
 
 export const IS_DRY_RUN = DRY_RUN;
