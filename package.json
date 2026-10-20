@@ -13,7 +13,7 @@
     "web": "node src/web.js"
   },
   "dependencies": {
-    "@solana/web3.js": "1.95.8",
+    "@solana/web3.js": "3.1.1",
     "bs58": "6.0.0",
     "ws": "8.18.0",
     "ajv": "8.17.1",
